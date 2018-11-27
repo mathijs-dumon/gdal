@@ -1982,6 +1982,9 @@ OGRErr OGRMSSQLSpatialTableLayer::ICreateFeature( OGRFeature *poFeature )
     /* the fid values are retrieved from the source layer */
     CPLODBCStatement oStatement( poSession );
 
+    // get the output value as result:
+    oStatement.Append("declare @ID table (ID int);");
+    
     if( poFeature->GetFID() != OGRNullFID && pszFIDColumn != nullptr && bIsIdentityFid )
         oStatement.Appendf( "SET IDENTITY_INSERT [%s].[%s] ON;",
                             pszSchemaName, pszTableName );
@@ -2062,7 +2065,7 @@ OGRErr OGRMSSQLSpatialTableLayer::ICreateFeature( OGRFeature *poFeature )
         /* no fields were added */
 
         if (nFID == OGRNullFID && pszFIDColumn != nullptr && (bIsIdentityFid || poDS->AlwaysOutputFid() ))
-            oStatement.Appendf(" OUTPUT INSERTED.[%s] DEFAULT VALUES;", GetFIDColumn());
+            oStatement.Appendf(" OUTPUT INSERTED.[%s] INTO @ID DEFAULT VALUES;", GetFIDColumn());
         else
             oStatement.Appendf( "DEFAULT VALUES;" );
     }
@@ -2070,7 +2073,7 @@ OGRErr OGRMSSQLSpatialTableLayer::ICreateFeature( OGRFeature *poFeature )
     {
         /* prepend VALUES section */
         if (nFID == OGRNullFID && pszFIDColumn != nullptr && (bIsIdentityFid || poDS->AlwaysOutputFid() ))
-            oStatement.Appendf(") OUTPUT INSERTED.[%s] VALUES (", GetFIDColumn());
+            oStatement.Appendf(") OUTPUT INSERTED.[%s] INTO @ID VALUES (", GetFIDColumn());
         else
             oStatement.Appendf( ") VALUES (" );
 
@@ -2246,7 +2249,10 @@ OGRErr OGRMSSQLSpatialTableLayer::ICreateFeature( OGRFeature *poFeature )
 
     if( nFID != OGRNullFID && pszFIDColumn != nullptr && bIsIdentityFid )
         oStatement.Appendf("SET IDENTITY_INSERT [%s].[%s] OFF;", pszSchemaName, pszTableName );
-
+    
+    // get the output value as result:
+    oStatement.Append("SELECT * FROM @ID;");
+    
 /* -------------------------------------------------------------------- */
 /*      Execute the insert.                                             */
 /* -------------------------------------------------------------------- */
