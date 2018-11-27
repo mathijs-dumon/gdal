@@ -1983,7 +1983,7 @@ OGRErr OGRMSSQLSpatialTableLayer::ICreateFeature(OGRFeature *poFeature)
 	CPLODBCStatement oStatement(poSession);
 
 	// get the output value as result:
-	if (nFID == OGRNullFID && pszFIDColumn != nullptr && (bIsIdentityFid || poDS->AlwaysOutputFid()))
+	if (poFeature->GetFID() == OGRNullFID && pszFIDColumn != nullptr && (bIsIdentityFid || poDS->AlwaysOutputFid()))
 		oStatement.Append("declare @ID table (ID int);");
 
 	if (poFeature->GetFID() != OGRNullFID && pszFIDColumn != nullptr && bIsIdentityFid)
